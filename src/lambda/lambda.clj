@@ -179,6 +179,14 @@
                         #(try (edn/read rdr)
                               (catch Exception _ nil))))))))
 
+(defn eval-step [expr]
+  (if (normal? expr)
+    expr
+    (reduction expr)))
+
+(defn eval-steps [expr]
+  (iterate eval-step expr))
+
 (defn head-reduction [expr]
   (if (head-normal? expr)
     expr
@@ -189,55 +197,62 @@
     expr
     (recur (reduction expr))))
 
-(def prog (head-reduction (ap-file "./src/lambda/core.rlj")))
-
 (defn thunk-apply [f arg]
   (Ap. f arg false unevaluated))
 
-(comment
-  #_ (time (full-reduction prog))
-  #_(time (head-reduction prog))
+(def stdenv (time (head-reduction (ap-file "./src/lambda/core.rlj"))))
+(defmacro with-stdenv [& expr]
+  `(thunk-apply
+    stdenv
+    (λ ~@'[id Y Z true false ap and or inc normal-not pair * exp right-fold-cons
+           0 + zero? dec if not fst snd pair-nil pair-cons right-fold-nil right-fold-nil? right-fold-head right-fold-tail
+           1 xor - pair-nil? pair-head pair-tail
+           2 div1
+           3 / .]
+       ~@expr)))
 
-  (do
-    (def state
-      (atom (thunk-apply
-             prog
-             (λ id Y Z true false ap and or inc normal-not pair * exp right-fold-cons
-                0 + zero? dec if not fst snd pair-nil pair-cons right-fold-nil right-fold-nil? right-fold-head right-fold-tail
-                1 xor - pair-nil? pair-head pair-tail
-                2 div1
-                3 / .
+#_ (time (full-reduction prog))
+#_(time (head-reduction prog))
 
-                #_(pair-head (pair-cons 2 (pair-cons 1 pair-nil)))
-                Y
+(str
+ (head-reduction
+  (with-stdenv
+    + 1 2)))
 
-                #_(/ ((right-fold-cons 3 (right-fold-cons 2 (right-fold-cons 1 right-fold-nil)))
-                      * 3)
-                     1)
-                #_(-  (* (inc (inc 0))
-                         (inc (inc 0)))
-                      (inc (inc 0)))
-                #_(- (* (inc (inc (inc 0)))
-                        (inc (inc 0)))
-                     (inc (inc (inc 0))))
-                #_(/ (inc (inc (inc (inc (inc (inc 0))))))
-                     (inc (inc (inc 0))))
-                #_(inc (inc 0))
-                #_(inc 0)
-                #_0
-                #_(/ (λ f x . f (f (f (f (f (f (f (f (f x)))))))))
-                     (λ f x . f (f (f x))))
-                #_(inc (inc (inc 0)))
-                #_(* (inc 0) (inc (inc (inc 0))))
-                #_(* (inc (inc 0))
-                     (inc (inc (inc 0))))
-                #_(inc inc (inc 0))
-                #_inc #_0))))
+(do
+ (def state
+   (atom (with-stdenv
 
-    (time
-     (while (not (head-normal? @state))
-       (swap! state reduction)))
-    (println (str @state))
-    @state)
+           (pair-head (pair-cons 2 (pair-cons 1 pair-nil)))
+           #_Y
 
-  )
+           #_(/ ((right-fold-cons 3 (right-fold-cons 2 (right-fold-cons 1 right-fold-nil)))
+                 * 3)
+                1)
+           #_(-  (* (inc (inc 0))
+                    (inc (inc 0)))
+                 (inc (inc 0)))
+           #_(- (* (inc (inc (inc 0)))
+                   (inc (inc 0)))
+                (inc (inc (inc 0))))
+           #_(/ (inc (inc (inc (inc (inc (inc 0))))))
+                (inc (inc (inc 0))))
+           #_(inc (inc 0))
+           #_(inc 0)
+           #_0
+           #_(/ (λ f x . f (f (f (f (f (f (f (f (f x)))))))))
+                (λ f x . f (f (f x))))
+           #_(inc (inc (inc 0)))
+           #_(* (inc 0) (inc (inc (inc 0))))
+           #_(* (inc (inc 0))
+                (inc (inc (inc 0))))
+           #_(inc inc (inc 0))
+           #_inc #_0)))
+
+ (time
+  (while (not (head-normal? @state))
+    (swap! state reduction)))
+ (println (str @state))
+ @state)
+
+
