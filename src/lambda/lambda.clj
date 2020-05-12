@@ -9,11 +9,11 @@
 (declare ap? lambda?)
 
 (defprotocol Thunk
-  (normal? [t])
-  (head-normal? [t])
-  (free-variables [t])
-  (substitution [t v e])
-  (reduction [t]))
+  (normal? [t] "Do any more reduction rules apply to the thunk")
+  (head-normal? [t] "Do any more reduction rules apply to the head of the thunk")
+  (free-variables [t] "Get a collection of free variables from the thunk")
+  (substitution [t v e] "Rename any bound occurrence of variable")
+  (reduction [t] "Calculate a reduction step"))
 
 (defprotocol Dbg
   (fv [_]))
