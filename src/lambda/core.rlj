@@ -1,0 +1,126 @@
+;; We require our host evaluator to define an evaluator for lambda
+;; calculus: lists, symbols and a special form: (λ args... . body)
+
+;; this is, as defined by text book, with currying.
+
+;; ';' starts line comments
+
+(λ baseline . baseline
+   ;; id
+   (λ a . a)
+   ;; Y
+   (λ f .
+      (λ x . f (x x))
+      (λ x . f (x x)))
+   ;; Z
+   (λ f .
+      (λ x .
+         f
+         (λ v . x x v)
+         (λ v . x x v)))
+   ;; true
+   (λ p _ . p)
+   ;; false
+   (λ _ q . q)
+   ;; ap
+   (λ v h . h v)
+   ;; and
+   (λ p q . p q p)
+   ;; or
+   (λ p q . p p q)
+   ;; +1
+   (λ n f x . f (n f x))
+   ;; not
+   (λ p q r . p r q)                    ; normal order impl
+   ;; pair
+   (λ x y f . f x y)
+   ;; *
+   (λ m n f x . m (n f) x)
+   ;; exp
+   (λ m n . n m)
+   ;; right-fold-cons
+   (λ h t c n . c h (t c n)))
+
+(λ id Y Z true false ap and or inc normal-not pair * exp right-fold-cons
+   line . line
+   id Y Z true false ap and or inc normal-not pair * exp right-fold-cons
+   ;; 0
+   false
+   ;; +
+   (λ m n f x . m f (n f x))
+   ;; zero?
+   (λ n . n (true false) true)
+   ;; dec
+   (λ n f x .
+      n (λ g h . h (g f))
+      (true x) id)
+   ;; if
+   id
+   ;; not
+   (λ p . p true false)
+   ;; fst
+   (λ p . p true)
+   ;; snd
+   (λ p . p false)
+   ;; pair-nil
+   (pair true true)
+   ;; pair-cons
+   (λ h t . pair false (pair h t))
+   ;; right-fold-nil
+   false
+   ;; right-fold-nil?
+   (λ l . l (λ h t . false) true)
+   ;; right-fold-head
+   (λ l . l true false)
+   ;; right-fold-tail
+   (λ l c n l .
+      l (λ h t g . g h (t c))
+      (λ _ . n) false))
+
+(λ id Y Z true false ap and or inc normal-not pair * exp right-fold-cons
+   0 + zero? dec if not fst snd pair-nil pair-cons right-fold-nil right-fold-nil? right-fold-head right-fold-tail
+   line . line
+   id Y Z true false ap and or inc normal-not pair * exp right-fold-cons
+   0 + zero? dec if not fst snd pair-nil pair-cons right-fold-nil right-fold-nil? right-fold-head right-fold-tail
+   ;; 1
+   (inc 0)
+   ;; xor
+   (λ a b . a (not b) b)
+   ;; -
+   (λ m n . n dec m)
+   ;; pair-nil?
+   fst
+   ;; pair-head
+   (λ c . fst (snd c))
+   ;; pair-tail
+   (λ c . snd (snd c)))
+
+(λ id Y Z true false ap and or inc normal-not pair * exp right-fold-cons
+   0 + zero? dec if not fst snd pair-nil pair-cons right-fold-nil right-fold-nil? right-fold-head right-fold-tail
+   1 xor - pair-nil? pair-head pair-tail
+   line . line
+   id Y Z true false ap and or inc normal-not pair * exp right-fold-cons
+   0 + zero? dec if not fst snd pair-nil pair-cons right-fold-nil right-fold-nil? right-fold-head right-fold-tail
+   1 xor - pair-nil? pair-head pair-tail
+   ;; 2
+   (inc 1)
+   ;; div1
+   (λ div1 n m f x .
+      (λ d .
+         zero? d (0 f x)
+         (f (div1 d m f x)))
+      (- n m)))
+
+(λ id Y Z true false ap and or inc normal-not pair * exp right-fold-cons
+   0 + zero? dec if not fst snd pair-nil pair-cons right-fold-nil right-fold-nil? right-fold-head right-fold-tail
+   1 xor - pair-nil? pair-head pair-tail
+   2 div1
+   frontline . frontline
+   ;; Z 0 1 2 inc dec zero? + - *
+   id Y Z true false ap and or inc normal-not pair * exp right-fold-cons
+   0 + zero? dec if not fst snd pair-nil pair-cons right-fold-nil right-fold-nil? right-fold-head right-fold-tail
+   1 xor - pair-nil? pair-head pair-tail
+   2 div1
+   (inc 2)
+   ;; /
+   (λ n . (Y div1) (inc n)))
